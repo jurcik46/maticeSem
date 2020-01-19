@@ -102,7 +102,6 @@ struct Fraction **loadMatrixFromFile(struct Matrix *pMatrixStruct, struct Fracti
             fscanf(file, "%lld%c%lld", &numerator, &fractionBar, &denominator);
             pMatrix[i][j].numerator = numerator;
             pMatrix[i][j].denominator = denominator;
-            printf("%lld/%lld", pMatrix[i][j].numerator, pMatrix[i][j].denominator);
         }
     }
     if (fclose(file) == EOF)

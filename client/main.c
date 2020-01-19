@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         return (EXIT_FAILURE);
     struct Matrix *test = initMatrixStruct(0, 0);
 
-    test->label = 'B';
+    test->label = 'A';
     struct Fraction **testMatrix = loadMatrixFromFile(test, testMatrix);
     if (testMatrix != NULL)
     {
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     test->payloadLength = strlen(test->matrixPayload);
     write(getSocket(), test, sizeof(struct Matrix) + strlen(test->matrixPayload));
 
-        // a->matrix = allocateMatrix(4, 6);
+    // a->matrix = allocateMatrix(4, 6);
 
     // memset(a, 0, sizeof(struct Matrix));
 

@@ -21,17 +21,22 @@ struct Fraction **transposeMatrix(const struct Matrix *matrixStructSource, const
     return matrixDestination;
 }
 
-struct Fraction **additionMatrix(const struct Matrix *matrixStructA, const struct Fraction **matrixA, const struct Matrix *matrixStructB, const struct Fraction **matrixB)
+struct Fraction **additionMatrixs(const struct Matrix *matrixStructA, const struct Fraction **matrixA, const struct Matrix *matrixStructB, const struct Fraction **matrixB, struct Fraction **result)
 {
     if (matrixStructA->rows == matrixStructB->rows && matrixStructA->columns == matrixStructB->columns)
     {
-        struct Fraction **result = allocateMatrix(matrixStructA->rows, matrixStructA->columns);
+        result = allocateMatrix(matrixStructA->rows, matrixStructA->columns);
+
         for (int i = 0; i < matrixStructA->rows; i++)
         {
             for (int j = 0; j < matrixStructA->columns; j++)
             {
 
                 // result. = a->matica[i][j] + b->matica[i][j];
+                if (matrixA[i][j].denominator == 0 || matrixB[i][j].denominator == 0)
+                {
+                    return NULL;
+                }
                 result[i][j].denominator = nsn(matrixA[i][j].denominator, matrixB[i][j].denominator);
                 result[i][j].numerator = result[i][j].denominator / matrixA[i][j].denominator * matrixA[i][j].numerator + result[i][j].denominator / matrixB[i][j].denominator * matrixB[i][j].numerator;
                 fixFraction(&result[i][j]);
@@ -40,6 +45,60 @@ struct Fraction **additionMatrix(const struct Matrix *matrixStructA, const struc
         return result;
     }
     perror("We need matrices with the same number of elements to sum the matrices.\n");
+    return NULL;
+}
+
+struct Fraction **substractionMatrixs(const struct Matrix *matrixStructA, const struct Fraction **matrixA, const struct Matrix *matrixStructB, const struct Fraction **matrixB, struct Fraction **result)
+{
+    if (matrixStructA->rows == matrixStructB->rows && matrixStructA->columns == matrixStructB->columns)
+    {
+        result = allocateMatrix(matrixStructA->rows, matrixStructA->columns);
+
+        for (int i = 0; i < matrixStructA->rows; i++)
+        {
+            for (int j = 0; j < matrixStructA->columns; j++)
+            {
+
+                // result. = a->matica[i][j] + b->matica[i][j];
+                if (matrixA[i][j].denominator == 0 || matrixB[i][j].denominator == 0)
+                {
+                    return NULL;
+                }
+                result[i][j].denominator = nsn(matrixA[i][j].denominator, matrixB[i][j].denominator);
+                result[i][j].numerator = result[i][j].denominator / matrixA[i][j].denominator * matrixA[i][j].numerator - result[i][j].denominator / matrixB[i][j].denominator * matrixB[i][j].numerator;
+                fixFraction(&result[i][j]);
+            }
+        }
+        return result;
+    }
+    perror("We need matrices with the same number of elements to substraction the matrices.\n");
+    return NULL;
+}
+
+struct Fraction **divisionMatrixs(const struct Matrix *matrixStructA, const struct Fraction **matrixA, const struct Matrix *matrixStructB, const struct Fraction **matrixB, struct Fraction **result)
+{
+    if (matrixStructA->rows == matrixStructB->rows && matrixStructA->columns == matrixStructB->columns)
+    {
+        result = allocateMatrix(matrixStructA->rows, matrixStructA->columns);
+
+        for (int i = 0; i < matrixStructA->rows; i++)
+        {
+            for (int j = 0; j < matrixStructA->columns; j++)
+            {
+
+                // result. = a->matica[i][j] + b->matica[i][j];
+                if (matrixA[i][j].denominator == 0 || matrixB[i][j].denominator == 0)
+                {
+                    return NULL;
+                }
+                result[i][j].denominator = nsn(matrixA[i][j].denominator, matrixB[i][j].denominator);
+                result[i][j].numerator = result[i][j].denominator / matrixA[i][j].denominator * matrixA[i][j].numerator - result[i][j].denominator / matrixB[i][j].denominator * matrixB[i][j].numerator;
+                fixFraction(&result[i][j]);
+            }
+        }
+        return result;
+    }
+    perror("We need matrices with the same number of elements to substraction the matrices.\n");
     return NULL;
 }
 

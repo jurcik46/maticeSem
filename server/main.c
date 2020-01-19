@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     struct Matrix *test = initMatrixStruct(0, 0);
     read(getSocket(), buff, 1500);
     test = (struct Matrix *)buff;
-    printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", test->label, test->rows, test->columns, test->payloadLength, buff);
+    printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", test->label, test->rows, test->columns, test->payloadLength, test->matrixPayload);
 
     struct Fraction **testMatrix = allocateMatrix(test->rows, test->columns);
 
@@ -40,17 +40,18 @@ int main(int argc, char **argv)
     printMatrix(test->rows, test->columns, testMatrix);
     printf("\n");
 
-    struct Matrix *pom = initMatrixStruct(0, 0);
+    struct Matrix *pom = initMatrixStruct(test->rows, test->columns);
     // struct Fraction **pomMatrix = transposeMatrix(test, testMatrix, &pom, pomMatrix);
-    struct Fraction **pomMatrix = additionMatrix(test, testMatrix, test, testMatrix);
-
-    printMatrix(pom->rows, pom->columns, pomMatrix);
-    printf("\n");
-
-    strcpy(pom->matrixPayload, convertMatrixToString(pom->rows, pom->columns, pomMatrix));
-    pom->payloadLength = strlen(pom->matrixPayload);
-    write(getSocket(), pom, sizeof(struct Matrix) + strlen(pom->matrixPayload));
-    printf("Sending Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", pom->label, pom->rows, pom->columns, pom->payloadLength, pom->matrixPayload);
+    struct Fraction **pomMatrix = additionMatrix(test, testMatrix, test, testMatrix, pomMatrix);
+    if (additionMatrix(test, testMatrix, test, testMatrix, pomMatrix))
+    {
+        printMatrix(pom->rows, pom->columns, pomMatrix);
+        printf("\n");
+        strcpy(pom->matrixPayload, convertMatrixToString(pom->rows, pom->columns, pomMatrix));
+        pom->payloadLength = strlen(pom->matrixPayload);
+        write(getSocket(), pom, sizeof(struct Matrix) + strlen(pom->matrixPayload));
+        printf("Sending Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", pom->label, pom->rows, pom->columns, pom->payloadLength, pom->matrixPayload);
+    }
 
     // deAllocateMatrix(pom->rows, pom->columns, pom->matrix);
     // free(pom);
