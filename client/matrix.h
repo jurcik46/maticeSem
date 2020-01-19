@@ -11,7 +11,7 @@ extern "C"
     {
         int64_t numerator;
         int64_t denominator;
-    };
+    } __attribute__((packed));
 
     struct Matrix
     {
@@ -22,7 +22,6 @@ extern "C"
         char matrixPayload[0];
 
     } __attribute__((packed));
-
     struct Fraction **allocateMatrix(int rows, int columns);
     struct Matrix *initMatrixStruct(int rows, int columns);
     void deAllocateMatrix(int rows, int columns, struct Fraction ***pMatrix);

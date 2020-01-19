@@ -13,24 +13,28 @@
 
 int main(int argc, char **argv)
 {
-    char buff[1500];
-    memset(buff, '\0', 1500);
-    struct Matrix *test = initMatrixStruct(0, 0);
-    memset(test, 0, sizeof(struct Matrix));
+
+    // memset(test, 0, sizeof(struct Matrix));
 
     if (!createServer(5002))
         return (EXIT_FAILURE);
     printf("A Client connected  successfully\n");
     // read(getSocket(), test, sizeof(struct Matrix));
     // printf("%ld", sizeof(struct Matrix));
-    read(getSocket(), test, sizeof(struct Matrix) + 1500);
+
     // char *buf = malloc((sizeof(struct Fraction) + sizeof(char) * test->rows * test->columns));
     // read(getSocket(), buf, (sizeof(struct Fraction) + sizeof(char) * test->rows * test->columns));
-    strncpy(buff, test->matrixPayload, test->payloadLength);
-    struct Fraction **testMatrix = allocateMatrix(test->rows, test->columns);
+    // strncpy(buff, test->matrixPayload, test->payloadLength);
+    char buff[1500];
+    memset(buff, '\0', 1500);
+    struct Matrix *test = initMatrixStruct(0, 0);
+    read(getSocket(), buff, 1500);
+    test = (struct Matrix *)buff;
     printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", test->label, test->rows, test->columns, test->payloadLength, buff);
 
-    convertStringToMatrix(buff, test->rows, test->columns, testMatrix);
+    struct Fraction **testMatrix = allocateMatrix(test->rows, test->columns);
+
+    convertStringToMatrix(test->matrixPayload, test->rows, test->columns, testMatrix);
     // read(getSocket(), buff, sizeof(buff));
     // printf("%s\n", buff);
     printMatrix(test->rows, test->columns, testMatrix);

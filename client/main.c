@@ -63,24 +63,29 @@ int main(int argc, char **argv)
     // write(getSocket(), test, sizeof(test) + (sizeof(struct Fraction) * test->rows * test->columns));
     // int a = (sizeof(struct Fraction) * test->rows * test->columns);
     // printf("%s", sendMatrix(test->rows, test->columns, test->matrix));
-    printf("%s \n", test->matrixPayload);
+    // printf("%s \n", test->matrixPayload);
     // printf("aaaa %d %d  %d", sizeof(struct Matrix), strlen(test->matr9ixPayload), sizeof(test->matrix));
     test->payloadLength = strlen(test->matrixPayload);
     write(getSocket(), test, sizeof(struct Matrix) + strlen(test->matrixPayload));
 
+        // a->matrix = allocateMatrix(4, 6);
+
+    // memset(a, 0, sizeof(struct Matrix));
+
+    // memcpy(a, buff, sizeof(struct Matrix));
+    // char *ab = malloc(sizeof(a->payloadLength));
+    // memcpy(a, buff, sizeof(struct Matrix) + a -);
+    // read(getSocket(), a, sizeof(struct Matrix));
+    // strncpy(buff, a->matrixPayload, a->payloadLength);
     char buff[1500];
     memset(buff, '\0', 1500);
     struct Matrix *a = initMatrixStruct(0, 0);
-    // a->matrix = allocateMatrix(4, 6);
-
-    // memset(a, 0, sizeof(struct Matrix));
-    read(getSocket(), a, sizeof(struct Matrix) + 1500);
-    strncpy(buff, a->matrixPayload, a->payloadLength);
-    printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", a->label, a->rows, a->columns, a->payloadLength, buff);
-
+    read(getSocket(), buff, 1500);
+    a = (struct Matrix *)buff;
+    printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", a->label, a->rows, a->columns, a->payloadLength, a->matrixPayload);
     struct Fraction **aMatrix = allocateMatrix(a->rows, a->columns);
 
-    convertStringToMatrix(buff, a->rows, a->columns, aMatrix);
+    convertStringToMatrix(a->matrixPayload, a->rows, a->columns, aMatrix);
     printMatrix(a->rows, a->columns, aMatrix);
     // write(getSocket(), , (sizeof(struct Fraction) + sizeof(char) * test->rows * test->columns));
     return (EXIT_SUCCESS);
