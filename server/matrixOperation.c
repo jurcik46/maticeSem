@@ -37,9 +37,11 @@ struct Fraction **additionMatrixs(const struct Matrix *matrixStructA, const stru
                 {
                     return NULL;
                 }
-                result[i][j].denominator = nsn(matrixA[i][j].denominator, matrixB[i][j].denominator);
-                result[i][j].numerator = result[i][j].denominator / matrixA[i][j].denominator * matrixA[i][j].numerator + result[i][j].denominator / matrixB[i][j].denominator * matrixB[i][j].numerator;
-                fixFraction(&result[i][j]);
+                result[i][j] = additionFraction(matrixA[i][j], matrixB[i][j]);
+
+                // result[i][j].denominator = nsn(matrixA[i][j].denominator, matrixB[i][j].denominator);
+                // result[i][j].numerator = result[i][j].denominator / matrixA[i][j].denominator * matrixA[i][j].numerator + result[i][j].denominator / matrixB[i][j].denominator * matrixB[i][j].numerator;
+                // fixFraction(&result[i][j]);
             }
         }
         return result;
@@ -75,33 +77,79 @@ struct Fraction **substractionMatrixs(const struct Matrix *matrixStructA, const 
     return NULL;
 }
 
-struct Fraction **divisionMatrixs(const struct Matrix *matrixStructA, const struct Fraction **matrixA, const struct Matrix *matrixStructB, const struct Fraction **matrixB, struct Fraction **result)
+struct Fraction determinantMatrix(struct Matrix *matrixStruct, struct Fraction **matrix)
 {
-    if (matrixStructA->rows == matrixStructB->rows && matrixStructA->columns == matrixStructB->columns)
+    struct Fraction s, det, pomE;
+    det.numerator = 0, det.denominator = 1;
+    s.numerator = 1, s.denominator = 1;
+    pomE.numerator = -1, pomE.denominator = -1;
+
+    struct Matrix *pomMatrixStruct = initMatrixStruct(matrixStruct->rows, matrixStruct->columns);
+    struct Fraction **pomMatrix = allocateMatrix(matrixStruct->rows, matrixStruct->columns);
+
+    int i, j, m, n, c;
+    if (matrixStruct->rows != matrixStruct->columns)
     {
-        result = allocateMatrix(matrixStructA->rows, matrixStructA->columns);
-
-        for (int i = 0; i < matrixStructA->rows; i++)
+        perror("The matrix must be square to calculate the determinant!");
+        return det;
+    }
+    if (matrixStruct->rows == 1)
+    {
+        return (matrix[0][0]);
+    }
+    for (c = 0; c < matrixStruct->rows; c++)
+    {
+        m = 0;
+        n = 0;
+        for (i = 0; i < matrixStruct->rows; i++)
         {
-            for (int j = 0; j < matrixStructA->columns; j++)
+            for (j = 0; j < matrixStruct->rows; j++)
             {
-
-                // result. = a->matica[i][j] + b->matica[i][j];
-                if (matrixA[i][j].denominator == 0 || matrixB[i][j].denominator == 0)
+                pomMatrix[i][j].numerator = 0, pomMatrix[i][j].denominator = 1;
+                if (i != 0 && j != c)
                 {
-                    return NULL;
+                    pomMatrix[m][n] = matrix[i][j];
+                    if (n < (matrixStruct->rows - 2))
+                        n++;
+                    else
+                    {
+                        n = 0;
+                        if (matrixStruct->rows == matrixStruct->columns)
+                            m++;
+                    }
                 }
-                result[i][j].denominator = nsn(matrixA[i][j].denominator, matrixB[i][j].denominator);
-                result[i][j].numerator = result[i][j].denominator / matrixA[i][j].denominator * matrixA[i][j].numerator - result[i][j].denominator / matrixB[i][j].denominator * matrixB[i][j].numerator;
-                fixFraction(&result[i][j]);
             }
         }
-        return result;
+        pomMatrixStruct->rows--;
+        pomMatrixStruct->columns--;
+
+        det = additionFraction(det, multiplicationFraction(s, multiplicationFraction(matrix[0][c], determinantMatrix(pomMatrixStruct, pomMatrix))));
+        s = multiplicationFraction(pomE, s);
+        pomMatrixStruct->rows++;
+        pomMatrixStruct->columns++;
     }
-    perror("We need matrices with the same number of elements to substraction the matrices.\n");
-    return NULL;
+    // deAllocateMatrix(matrixStruct->rows, matrixStruct->columns, pomMatrix);
+    // free(pomMatrixStruct);
+    fixFraction(&det);
+    return (det);
 }
 
+struct Fraction multiplicationFraction(struct Fraction a, struct Fraction b)
+{
+    struct Fraction result;
+    result.numerator = a.numerator * b.numerator;
+    result.denominator = a.denominator * b.denominator;
+    fixFraction(&result);
+    return result;
+}
+struct Fraction additionFraction(struct Fraction a, struct Fraction b)
+{
+    struct Fraction result;
+    result.denominator = nsn(a.denominator, b.denominator);
+    result.numerator = result.denominator / a.denominator * a.numerator + result.denominator / b.denominator * b.numerator;
+    fixFraction(&result);
+    return result;
+}
 int64_t nsd(int64_t a, int64_t b)
 {
     if (a < 0)

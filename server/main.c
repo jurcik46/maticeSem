@@ -40,10 +40,16 @@ int main(int argc, char **argv)
     printMatrix(test->rows, test->columns, testMatrix);
     printf("\n");
 
+    struct Fraction aaa = determinantMatrix(test, testMatrix);
+    printf("%ld/%ld\n", aaa.numerator, aaa.denominator);
+
+    closeServer();
+    printf("Connection was closed\n");
+    return (EXIT_SUCCESS);
     struct Matrix *pom = initMatrixStruct(test->rows, test->columns);
     // struct Fraction **pomMatrix = transposeMatrix(test, testMatrix, &pom, pomMatrix);
-    struct Fraction **pomMatrix = additionMatrix(test, testMatrix, test, testMatrix, pomMatrix);
-    if (additionMatrix(test, testMatrix, test, testMatrix, pomMatrix))
+    struct Fraction **pomMatrix = additionMatrixs(test, testMatrix, test, testMatrix, pomMatrix);
+    if (pomMatrix)
     {
         printMatrix(pom->rows, pom->columns, pomMatrix);
         printf("\n");

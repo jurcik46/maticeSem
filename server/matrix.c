@@ -44,7 +44,12 @@ void printMatrix(int rows, int columns, struct Fraction **pMatrix)
     {
         for (int j = 0; j < columns; j++)
         {
-            printf(" %lld/%lld ", pMatrix[i][j].numerator, pMatrix[i][j].denominator);
+            if (pMatrix[i][j].numerator != 0)
+            {
+                printf(" %lld/%lld ", pMatrix[i][j].numerator, pMatrix[i][j].denominator);
+                continue;
+            }
+            printf(" 0/0 ");
         }
         printf("\n");
     }
