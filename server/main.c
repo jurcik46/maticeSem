@@ -41,7 +41,9 @@ int main(int argc, char **argv)
     printf("\n");
 
     struct Matrix *pom = initMatrixStruct(0, 0);
-    struct Fraction **pomMatrix = transposeMatrix(test, testMatrix, &pom, pomMatrix);
+    // struct Fraction **pomMatrix = transposeMatrix(test, testMatrix, &pom, pomMatrix);
+    struct Fraction **pomMatrix = additionMatrix(test, testMatrix, test, testMatrix);
+
     printMatrix(pom->rows, pom->columns, pomMatrix);
     printf("\n");
 
