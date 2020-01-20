@@ -77,77 +77,84 @@ struct Fraction **substractionMatrixs(const struct Matrix *matrixStructA, const 
     return NULL;
 }
 
-void cofatorMatrix(int rc, struct Fraction matrix[rc][rc], struct Fraction tempMatrix[rc][rc], int p, int q)
-{
-    int i = 0, j = 0;
+// void cofatorMatrix(int rc, struct Fraction matrix[rc][rc], struct Fraction tempMatrix[rc][rc], int p, int q)
+// {
+//     int i = 0, j = 0;
 
-    for (int row = 0; row < rc; row++)
-    {
-        for (int col = 0; col < rc; col++)
-        {
-            //  Copying into temporary matrix only those element
-            //  which are not in given row and column
-            if (row != p && col != q)
-            {
-                tempMatrix[i][j++] = matrix[row][col];
+//     for (int row = 0; row < rc; row++)
+//     {
+//         for (int col = 0; col < rc; col++)
+//         {
+//             //  Copying into temporary matrix only those element
+//             //  which are not in given row and column
+//             if (row != p && col != q)
+//             {
+//                 tempMatrix[i][j++] = matrix[row][col];
+//                 // printf("I %d J: %d  ROW: %d COL: %d  tempMatrix: %ld/%ld oldMatrix: %ld/%ld\n", i, j, row, col, tempMatrix[i][j - 1].numerator, tempMatrix[i][j - 1].denominator, matrix[row][col].numerator, matrix[row][col].denominator);
 
-                // Row is filled, so increase row index and
-                // reset col index
-                if (j == rc - 1)
-                {
-                    j = 0;
-                    i++;
-                }
-            }
-        }
-    }
-}
+//                 // tempMatrix[i][j++].numerator = matrix[row][col].numerator;
+//                 // tempMatrix[i][j++].denominator = matrix[row][col].denominator;
 
-struct Fraction determinantMatrix(uint32_t rc, struct Fraction matrix[rc][rc])
-{
-    printf("----------------------------------RC %d------------------------\n", rc);
-    printMatrixA(rc, matrix);
-    printf("----------------------------------RC %d------------------------\n", rc);
+//                 // Row is filled, so increase row index and
+//                 // reset col index
+//                 if (j == rc - 1)
+//                 {
+//                     j = 0;
+//                     i++;
+//                 }
+//             }
+//         }
+//     }
+// }
 
-    if (rc == 1)
-    {
-        return (matrix[0][0]);
-    }
-    struct Fraction sign, det;
-    det.numerator = 0, det.denominator = 1;
-    sign.numerator = 1, sign.denominator = 1;
-    struct Fraction tempMatrix[rc][rc];
-    for (int i = 0; i < rc; i++)
-    {
-        for (int j = 0; j < rc; j++)
-        {
-            tempMatrix[i][j].numerator = 0;
-            tempMatrix[i][j].denominator = 1;
-        }
-    }
-    // if (matrixStruct->rows != matrixStruct->columns)
-    // { // TODO check this in main
-    //     perror("The matrix must be square to calculate the determinant!");
-    //     return det;
-    // }
-    for (int f = 0; f < rc; f++)
-    {
-        cofatorMatrix(rc, matrix, tempMatrix, 0, f);
+// struct Fraction determinantMatrix(uint32_t rc, struct Fraction matrix[rc][rc])
+// {
+//     printf("----------------------------------RC %d------------------------\n", rc);
+//     printMatrixA(rc, matrix);
+//     printf("----------------------------------RC %d------------------------\n", rc);
 
-        // printf("----------------------------------TEMP RC %d------------------------\n", rc);
-        // printMatrixA(rc, tempMatrix);
-        // printf("----------------------------------TEMP RC %d------------------------\n", rc);
+//     struct Fraction sign, det;
+//     det.numerator = 0, det.denominator = 1;
+//     sign.numerator = 1, sign.denominator = 1;
+//     struct Fraction tempMatrix[rc][rc];
 
-        struct Fraction firstPart = multiplicationFraction(sign, matrix[0][f]);
-        struct Fraction secndPart = multiplicationFraction(firstPart, determinantMatrix(rc - 1, tempMatrix));
-        det = additionFraction(det, secndPart);
-        sign.numerator = -sign.numerator;
-        sign.denominator = -sign.denominator;
-    }
+//     if (rc == 1)
+//     {
+//         return (matrix[0][0]);
+//     }
+//     // for (int i = 0; i < rc; i++)
+//     // {
+//     //     for (int j = 0; j < rc; j++)
+//     //     {
+//     //         tempMatrix[i][j].numerator = 0;
+//     //         tempMatrix[i][j].denominator = 1;
+//     //     }
+//     // }
+//     // if (matrixStruct->rows != matrixStruct->columns)
+//     // { // TODO check this in main
+//     //     perror("The matrix must be square to calculate the determinant!");
+//     //     return det;
+//     // }
+//     for (int f = 0; f < rc; f++)
+//     {
+//         cofatorMatrix(rc, matrix, tempMatrix, 0, f);
+//         // printf("---------------------------------- %d------------------------\n", rc);
+//         // printMatrixA(rc, tempMatrix);
+//         // printf("---------------------------------- %d------------------------\n", rc);
 
-    fixFraction(&det);
-    return (det);
-}
+//         // printf("----------------------------------TEMP RC %d------------------------\n", rc);
+//         // printMatrixA(rc, tempMatrix);
+//         // printf("----------------------------------TEMP RC %d------------------------\n", rc);
+//         struct Fraction firstPart = multiplicationFraction(sign, matrix[0][f]);
+//         struct Fraction secndPart = multiplicationFraction(firstPart, determinantMatrix(rc - 1, tempMatrix));
+//         det = additionFraction(det, secndPart);
+//         sign.numerator = -sign.numerator;
+//         sign.denominator = -sign.denominator;
+//     }
+
+// fixFraction(&det);
+// return (det);
+// }
 
 void printMatrixA(uint32_t rc, struct Fraction matrix[rc][rc])
 {
@@ -160,7 +167,7 @@ void printMatrixA(uint32_t rc, struct Fraction matrix[rc][rc])
             //     printf(" %lld/%lld ", matrix[i][j].numerator, matrix[i][j].denominator);
             //     continue;
             // }
-            printf(" %lld/%lld ", matrix[i][j].numerator, matrix[i][j].denominator);
+            printf(" %ld/%ld ", matrix[i][j].numerator, matrix[i][j].denominator);
 
             // printf(" 0/0 ");
         }
