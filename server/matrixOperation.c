@@ -77,61 +77,95 @@ struct Fraction **substractionMatrixs(const struct Matrix *matrixStructA, const 
     return NULL;
 }
 
-struct Fraction determinantMatrix(struct Matrix *matrixStruct, struct Fraction **matrix)
+void cofatorMatrix(int rc, struct Fraction matrix[rc][rc], struct Fraction tempMatrix[rc][rc], int p, int q)
 {
-    struct Fraction s, det, pomE;
-    det.numerator = 0, det.denominator = 1;
-    s.numerator = 1, s.denominator = 1;
-    pomE.numerator = -1, pomE.denominator = -1;
+    int i = 0, j = 0;
 
-    struct Matrix *pomMatrixStruct = initMatrixStruct(matrixStruct->rows, matrixStruct->columns);
-    struct Fraction **pomMatrix = allocateMatrix(matrixStruct->rows, matrixStruct->columns);
-
-    int i, j, m, n, c;
-    if (matrixStruct->rows != matrixStruct->columns)
+    for (int row = 0; row < rc; row++)
     {
-        perror("The matrix must be square to calculate the determinant!");
-        return det;
-    }
-    if (matrixStruct->rows == 1)
-    {
-        return (matrix[0][0]);
-    }
-    for (c = 0; c < matrixStruct->rows; c++)
-    {
-        m = 0;
-        n = 0;
-        for (i = 0; i < matrixStruct->rows; i++)
+        for (int col = 0; col < rc; col++)
         {
-            for (j = 0; j < matrixStruct->rows; j++)
+            //  Copying into temporary matrix only those element
+            //  which are not in given row and column
+            if (row != p && col != q)
             {
-                pomMatrix[i][j].numerator = 0, pomMatrix[i][j].denominator = 1;
-                if (i != 0 && j != c)
+                tempMatrix[i][j++] = matrix[row][col];
+
+                // Row is filled, so increase row index and
+                // reset col index
+                if (j == rc - 1)
                 {
-                    pomMatrix[m][n] = matrix[i][j];
-                    if (n < (matrixStruct->rows - 2))
-                        n++;
-                    else
-                    {
-                        n = 0;
-                        if (matrixStruct->rows == matrixStruct->columns)
-                            m++;
-                    }
+                    j = 0;
+                    i++;
                 }
             }
         }
-        pomMatrixStruct->rows--;
-        pomMatrixStruct->columns--;
-
-        det = additionFraction(det, multiplicationFraction(s, multiplicationFraction(matrix[0][c], determinantMatrix(pomMatrixStruct, pomMatrix))));
-        s = multiplicationFraction(pomE, s);
-        pomMatrixStruct->rows++;
-        pomMatrixStruct->columns++;
     }
-    // deAllocateMatrix(matrixStruct->rows, matrixStruct->columns, pomMatrix);
-    // free(pomMatrixStruct);
+}
+
+struct Fraction determinantMatrix(uint32_t rc, struct Fraction matrix[rc][rc])
+{
+    printf("----------------------------------RC %d------------------------\n", rc);
+    printMatrixA(rc, matrix);
+    printf("----------------------------------RC %d------------------------\n", rc);
+
+    if (rc == 1)
+    {
+        return (matrix[0][0]);
+    }
+    struct Fraction sign, det;
+    det.numerator = 0, det.denominator = 1;
+    sign.numerator = 1, sign.denominator = 1;
+    struct Fraction tempMatrix[rc][rc];
+    for (int i = 0; i < rc; i++)
+    {
+        for (int j = 0; j < rc; j++)
+        {
+            tempMatrix[i][j].numerator = 0;
+            tempMatrix[i][j].denominator = 1;
+        }
+    }
+    // if (matrixStruct->rows != matrixStruct->columns)
+    // { // TODO check this in main
+    //     perror("The matrix must be square to calculate the determinant!");
+    //     return det;
+    // }
+    for (int f = 0; f < rc; f++)
+    {
+        cofatorMatrix(rc, matrix, tempMatrix, 0, f);
+
+        // printf("----------------------------------TEMP RC %d------------------------\n", rc);
+        // printMatrixA(rc, tempMatrix);
+        // printf("----------------------------------TEMP RC %d------------------------\n", rc);
+
+        struct Fraction firstPart = multiplicationFraction(sign, matrix[0][f]);
+        struct Fraction secndPart = multiplicationFraction(firstPart, determinantMatrix(rc - 1, tempMatrix));
+        det = additionFraction(det, secndPart);
+        sign.numerator = -sign.numerator;
+        sign.denominator = -sign.denominator;
+    }
+
     fixFraction(&det);
     return (det);
+}
+
+void printMatrixA(uint32_t rc, struct Fraction matrix[rc][rc])
+{
+    for (int i = 0; i < rc; i++)
+    {
+        for (int j = 0; j < rc; j++)
+        {
+            // if (matrix[i][j].numerator != 0)
+            // {
+            //     printf(" %lld/%lld ", matrix[i][j].numerator, matrix[i][j].denominator);
+            //     continue;
+            // }
+            printf(" %lld/%lld ", matrix[i][j].numerator, matrix[i][j].denominator);
+
+            // printf(" 0/0 ");
+        }
+        printf("\n");
+    }
 }
 
 struct Fraction multiplicationFraction(struct Fraction a, struct Fraction b)

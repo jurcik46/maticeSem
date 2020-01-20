@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     printMatrix(test->rows, test->columns, testMatrix);
     printf("\n");
 
-    struct Fraction aaa = determinantMatrix(test, testMatrix);
+    struct Fraction aaa = determinantMatrix(test->rows, testMatrix);
     printf("%ld/%ld\n", aaa.numerator, aaa.denominator);
 
     closeServer();
