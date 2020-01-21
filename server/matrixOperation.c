@@ -42,7 +42,7 @@ struct Fraction **additionMatrixs(const struct Matrix *matrixStructA, const stru
         }
         return result;
     }
-    perror("We need matrices with the same number of elements to sum the matrices.\n");
+    fprintf(stderr, "We need matrices with the same number of elements to sum the matrices.\n");
     return NULL;
 }
 
@@ -69,7 +69,7 @@ struct Fraction **substractionMatrixs(const struct Matrix *matrixStructA, const 
         }
         return result;
     }
-    perror("We need matrices with the same number of elements to substraction the matrices.\n");
+    fprintf(stderr, "We need matrices with the same number of elements to substraction the matrices.\n");
     return NULL;
 }
 
@@ -117,24 +117,62 @@ struct Fraction determinantMatrix(uint32_t rcFix, uint32_t rc, struct Fraction *
     }
     return (det);
 }
-
-void printMatrixA(uint32_t rc, struct Fraction matrix[rc][rc])
+void adjoint(uint32_t rc, struct Fraction **matrixSource, struct Fraction **matrixDestination)
 {
+    if (rc == 1)
+    {
+        matrixDestination[0][0].numerator = 1;
+        matrixDestination[0][0].denominator = 1;
+        return;
+    }
+
+    struct Fraction sign;
+    sign.numerator = 1, sign.denominator = 1;
+    struct Fraction **tempMatrix = allocateMatrix(rc, rc);
+    // temp is used to store cofactors of A[][]
+
     for (int i = 0; i < rc; i++)
     {
         for (int j = 0; j < rc; j++)
         {
-            // if (matrix[i][j].numerator != 0)
-            // {
-            //     printf(" %lld/%lld ", matrix[i][j].numerator, matrix[i][j].denominator);
-            //     continue;
-            // }
-            printf(" %ld/%ld ", matrix[i][j].numerator, matrix[i][j].denominator);
+            // Get cofactor of A[i][j]
+            cofatorMatrix(rc, rc, matrixSource, tempMatrix, i, j);
 
-            // printf(" 0/0 ");
+            // sign of adj[j][i] positive if sum of row
+            // and column indexes is even.
+            sign.numerator = ((i + j) % 2 == 0) ? 1 : -1;
+
+            // Interchanging rows and columns to get the
+            // transpose of the cofactor matrix
+            matrixDestination[j][i] = multiplicationFraction(sign, determinantMatrix(rc, rc - 1, tempMatrix));
         }
-        printf("\n");
     }
+}
+
+struct Fraction **inverseMatrix(uint32_t rc, const struct Fraction **matrixSource, struct Fraction **matrixDestination)
+{
+    // { // TODO check this in main
+    //     perror("The matrix must be square to calculate the determinant!");
+    struct Fraction determinantSourceMatrix = determinantMatrix(rc, rc, matrixSource);
+    if (determinantSourceMatrix.numerator == 0)
+    {
+        perror("Singular matrix, can't find its inverse!");
+        return NULL;
+    }
+
+    matrixDestination = allocateMatrix(rc, rc);
+    // Find adjoint
+    struct Fraction **adj = allocateMatrix(rc, rc);
+    adjoint(rc, matrixSource, adj);
+    printMatrix(rc, rc, adj);
+    printf("\n");
+
+    // Find Inverse using formula "inverse(A) = adj(A)/det(A)"
+    for (int i = 0; i < rc; i++)
+        for (int j = 0; j < rc; j++)
+            matrixDestination[i][j] = divideFraction(adj[i][j], determinantSourceMatrix);
+    // printMatrix(rc, rc, matrixDestination);
+    return matrixDestination;
 }
 
 struct Fraction multiplicationFraction(struct Fraction a, struct Fraction b)
@@ -142,6 +180,15 @@ struct Fraction multiplicationFraction(struct Fraction a, struct Fraction b)
     struct Fraction result;
     result.numerator = a.numerator * b.numerator;
     result.denominator = a.denominator * b.denominator;
+    fixFraction(&result);
+    return result;
+}
+
+struct Fraction divideFraction(struct Fraction a, struct Fraction b)
+{
+    struct Fraction result;
+    result.numerator = a.numerator * b.denominator;
+    result.denominator = a.denominator * b.numerator;
     fixFraction(&result);
     return result;
 }

@@ -5,9 +5,29 @@ extern "C"
 {
 #endif
 
+#define BUFFER_SIZE 1500
+
+    typedef enum
+    {
+        Sum,
+        Difference,
+        Transpose,
+        Determinant,
+        Inverse,
+        End,
+        Failed,
+        Succes,
+    } OPTIONS;
+    struct ClientOptions
+    {
+        OPTIONS option;
+    } __attribute__((packed));
+
+    char buffer[BUFFER_SIZE];
     _Bool createServer(int port);
     void closeServer();
-    int getSocket();
+    char *readFromSocket();
+    void sendToClientSuccesOrFailed(OPTIONS result);
 
 #ifdef __cplusplus
 }

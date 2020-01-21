@@ -22,8 +22,6 @@ struct Matrix *initMatrixStruct(int rows, int columns)
     struct Matrix *pomNewMatrixStruct = malloc(sizeof(struct Matrix));
     pomNewMatrixStruct->rows = rows;
     pomNewMatrixStruct->columns = columns;
-    // if (rows && columns)
-    //     pomNewMatrixStruct->matrix = allocateMatrix(rows, columns);
     return pomNewMatrixStruct;
 }
 
@@ -94,7 +92,7 @@ struct Fraction **loadMatrixFromFile(struct Matrix *pMatrixStruct, struct Fracti
     while ((int)pMatrixStruct->label != (int)selectedMatrixLabel)
     {
         if (fscanf(file, "%c %lu %lu", &selectedMatrixLabel, &pMatrixStruct->rows, &pMatrixStruct->columns) == EOF)
-            return false;
+            return NULL;
     }
     pMatrix = allocateMatrix(pMatrixStruct->rows, pMatrixStruct->columns);
 

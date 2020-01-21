@@ -56,9 +56,20 @@ _Bool createServer(int port)
     return true;
 }
 
-int getSocket()
+char *readFromSocket()
 {
-    return ClientSocket;
+    memset(buffer, '\0', 1500);
+    read(ClientSocket, buffer, 1500);
+    return buffer;
+}
+
+void sendToClientSuccesOrFailed(OPTIONS result)
+{
+    struct ClientOptions *cOption = calloc(1, sizeof(struct ClientOptions));
+    memset(buffer, '\0', 1500);
+    cOption->option = result;
+    write(ClientSocket, cOption, sizeof(struct ClientOptions));
+    free(cOption);
 }
 
 void closeServer()

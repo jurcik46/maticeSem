@@ -6,82 +6,114 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "connection.h"
 #include "matrix.h"
 #include "matrixOperations.h"
 
+void printRawMatrixStruct(struct Matrix *matrixStruc)
+{
+    printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", matrixStruc->label, matrixStruc->rows, matrixStruc->columns, matrixStruc->payloadLength, matrixStruc->matrixPayload);
+}
 int main(int argc, char **argv)
 {
-
-    // double mat[N][N] = {{1, 0.5, 3},
-    //                     {2, 1, -3},
-    //                     {5, 0.2, -0.66666666666666}
-
-    // };
-    // display(mat, 3, 3);
-    // printf("Determinant of the matrix is : %g",
-    //        determinantOfMatrix(mat, N));
-    // return (EXIT_SUCCESS);
-
-    // memset(test, 0, sizeof(struct Matrix));
-    // struct Fraction o[3][3];
-    // o[0][0].numerator = 10, o[0][0].denominator = 10;
-    // o[0][1].numerator = 1, o[0][1].denominator = 2;
-    // o[0][2].numerator = 3, o[0][2].denominator = 1;
-    // o[1][0].numerator = 2, o[1][0].denominator = 1;
-    // o[1][1].numerator = 1, o[1][1].denominator = 1;
-    // o[1][2].numerator = -3, o[1][2].denominator = 1;
-    // o[2][0].numerator = 5, o[2][0].denominator = 1;
-    // o[2][1].numerator = 1, o[2][1].denominator = 5;
-    // o[2][2].numerator = -2, o[2][2].denominator = 3;
-
-    // struct Fraction k = determinantMatrix(3, 3, o);
-    // printf("%ld/%ld\n", k.numerator, k.denominator);
-    // return (EXIT_SUCCESS);
 
     if (!createServer(5002))
         return (EXIT_FAILURE);
     printf("A Client connected  successfully\n");
-    // read(getSocket(), test, sizeof(struct Matrix));
-    // printf("%ld", sizeof(struct Matrix));
 
-    // char *buf = malloc((sizeof(struct Fraction) + sizeof(char) * test->rows * test->columns));
-    // read(getSocket(), buf, (sizeof(struct Fraction) + sizeof(char) * test->rows * test->columns));
-    // strncpy(buff, test->matrixPayload, test->payloadLength);
-    char buff[1500];
-    memset(buff, '\0', 1500);
-    struct Matrix *test = initMatrixStruct(0, 0);
-    read(getSocket(), buff, 1500);
-    test = (struct Matrix *)buff;
-    printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", test->label, test->rows, test->columns, test->payloadLength, test->matrixPayload);
+    _Bool end = false;
 
-    struct Fraction **testMatrix = allocateMatrix(test->rows, test->columns);
-
-    convertStringToMatrix(test->matrixPayload, test->rows, test->columns, testMatrix);
-    // read(getSocket(), buff, sizeof(buff));
-    // printf("%s\n", buff);
-    printMatrix(test->rows, test->columns, testMatrix);
-    printf("\n");
-
-    struct Fraction aaa = determinantMatrix(test->rows, test->rows, testMatrix);
-    printf("%ld/%ld\n", aaa.numerator, aaa.denominator);
-
-    closeServer();
-    printf("Connection was closed\n");
-    return (EXIT_SUCCESS);
-    struct Matrix *pom = initMatrixStruct(test->rows, test->columns);
-    // struct Fraction **pomMatrix = transposeMatrix(test, testMatrix, &pom, pomMatrix);
-    struct Fraction **pomMatrix = additionMatrixs(test, testMatrix, test, testMatrix, pomMatrix);
-    if (pomMatrix)
+    while (!end)
     {
-        printMatrix(pom->rows, pom->columns, pomMatrix);
-        printf("\n");
-        strcpy(pom->matrixPayload, convertMatrixToString(pom->rows, pom->columns, pomMatrix));
-        pom->payloadLength = strlen(pom->matrixPayload);
-        write(getSocket(), pom, sizeof(struct Matrix) + strlen(pom->matrixPayload));
-        printf("Sending Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", pom->label, pom->rows, pom->columns, pom->payloadLength, pom->matrixPayload);
+        struct ClientOptions *cOptions = (struct ClientOptions *)readFromSocket();
+        struct Matrix *firstMatrixStruct;
+        struct Fraction **firstMatrix;
+        struct Matrix *secondMatrixStruct;
+        struct Fraction **secondMatrix;
+        struct Fraction **resultMatrix;
+        switch (cOptions->option)
+        {
+        case Sum:
+            firstMatrixStruct = initMatrixStruct(0, 0);
+            firstMatrixStruct = (struct Matrix *)readFromSocket();
+            printRawMatrixStruct(firstMatrixStruct);
+            // sendToClientSuccesOrFailed(Succes);
+            secondMatrixStruct = initMatrixStruct(0, 0);
+            secondMatrixStruct = (struct Matrix *)readFromSocket();
+            printRawMatrixStruct(secondMatrixStruct);
+
+            printf("\n--------- Matrix %c ---------\n", firstMatrixStruct->label);
+            firstMatrix = allocateMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns);
+            convertStringToMatrix(firstMatrixStruct->matrixPayload, firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+            printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+            printf("\n");
+            printf("\n--------- Matrix %c ---------\n", secondMatrixStruct->label);
+            secondMatrix = allocateMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns);
+            convertStringToMatrix(secondMatrixStruct->matrixPayload, secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
+            printMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
+            printf("\n");
+
+            printf("\n---------Result of sum  Matrix %c and Matrix %c ---------\n", firstMatrixStruct->label, secondMatrixStruct->label);
+            //TODO check same row a c lengt
+            resultMatrix = additionMatrixs(firstMatrixStruct, firstMatrix, secondMatrixStruct, secondMatrix, resultMatrix);
+            printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, resultMatrix);
+            // sendToClientSuccesOrFailed(Succes);
+            printf("SUM\n");
+            break;
+        case Difference:
+            printf("ddd\n");
+            break;
+        case Transpose:
+            printf("ttt\n");
+            break;
+        case Determinant:
+            break;
+        case Inverse:
+            break;
+        case End:
+            end = true;
+            break;
+        default:
+            printf("The selected option does not exist\n");
+        }
     }
+
+    // struct Matrix *test = initMatrixStruct(0, 0);
+
+    // test = (struct Matrix *)buff;
+
+    // struct Fraction **testMatrix = allocateMatrix(test->rows, test->columns);
+
+    // convertStringToMatrix(test->matrixPayload, test->rows, test->columns, testMatrix);
+    // // read(getSocket(), buff, sizeof(buff));
+    // // printf("%s\n", buff);
+    // printMatrix(test->rows, test->columns, testMatrix);
+    // printf("\n");
+
+    // // struct Fraction aaa = determinantMatrix(test->rows, test->rows, testMatrix);
+    // // printf("%ld/%ld\n", aaa.numerator, aaa.denominator);
+
+    // // closeServer();
+    // // printf("Connection was closed\n");
+    // // return (EXIT_SUCCESS);
+    // struct Matrix *pom = initMatrixStruct(test->rows, test->columns);
+    // // struct Fraction **pomMatrix = transposeMatrix(test, testMatrix, &pom, pomMatrix);
+    // // struct Fraction **pomMatrix;
+    // struct Fraction **pomMatrix = inverseMatrix(test->rows, testMatrix, pomMatrix);
+    // // _Bool re = inverseMatrix(pom->rows, testMatrix, pomMatrix);
+    // // printMatrix(pom->rows, pom->columns, pomMatrix);
+
+    // if (pomMatrix)
+    // {
+    //     printMatrix(pom->rows, pom->columns, pomMatrix);
+    //     printf("\n");
+    //     strcpy(pom->matrixPayload, convertMatrixToString(pom->rows, pom->columns, pomMatrix));
+    //     pom->payloadLength = strlen(pom->matrixPayload);
+    //     write(getSocket(), pom, sizeof(struct Matrix) + strlen(pom->matrixPayload));
+    //     printf("Sending Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", pom->label, pom->rows, pom->columns, pom->payloadLength, pom->matrixPayload);
+    // }
 
     // deAllocateMatrix(pom->rows, pom->columns, pom->matrix);
     // free(pom);

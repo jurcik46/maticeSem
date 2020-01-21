@@ -82,4 +82,7 @@ void convertStringToMatrix(char *matrixString, int rows, int columns, struct Fra
             ptr = strtok(NULL, ";");
         }
     }
+    while (strtok(NULL, ";") != NULL)
+    {
+    }
 }
