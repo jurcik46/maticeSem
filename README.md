@@ -6,7 +6,8 @@
 ## Client  
 	makefile
 	run: ./client "127.0.0.1" "10000"
-Klient nacitava matice zo suboru matrix.txt
+Klient nacitava matice zo suboru **matrix.txt**
+
 **Format:**
 
 	A 3 3
