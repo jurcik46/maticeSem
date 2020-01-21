@@ -164,14 +164,14 @@ struct Fraction **inverseMatrix(uint32_t rc, const struct Fraction **matrixSourc
     // Find adjoint
     struct Fraction **adj = allocateMatrix(rc, rc);
     adjoint(rc, matrixSource, adj);
-    printMatrix(rc, rc, adj);
-    printf("\n");
+    // printMatrix(rc, rc, adj);
+    // printf("\n");
 
-    // Find Inverse using formula "inverse(A) = adj(A)/det(A)"
     for (int i = 0; i < rc; i++)
         for (int j = 0; j < rc; j++)
             matrixDestination[i][j] = divideFraction(adj[i][j], determinantSourceMatrix);
-    // printMatrix(rc, rc, matrixDestination);
+    printMatrix(rc, rc, adj);
+
     return matrixDestination;
 }
 

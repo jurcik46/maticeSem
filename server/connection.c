@@ -58,15 +58,20 @@ _Bool createServer(int port)
 
 char *readFromSocket()
 {
-    memset(buffer, '\0', 1500);
-    read(ClientSocket, buffer, 1500);
+    char *buffer = (char *)calloc(BUFFER_SIZE, sizeof(char));
+    memset(buffer, '\0', BUFFER_SIZE);
+    read(ClientSocket, buffer, BUFFER_SIZE);
     return buffer;
+}
+
+void sendToClient(const void *buff, size_t n)
+{
+    write(ClientSocket, buff, n);
 }
 
 void sendToClientSuccesOrFailed(OPTIONS result)
 {
     struct ClientOptions *cOption = calloc(1, sizeof(struct ClientOptions));
-    memset(buffer, '\0', 1500);
     cOption->option = result;
     write(ClientSocket, cOption, sizeof(struct ClientOptions));
     free(cOption);

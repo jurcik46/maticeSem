@@ -21,12 +21,13 @@ extern "C"
     struct ClientOptions
     {
         OPTIONS option;
+        char Payload[0];
     } __attribute__((packed));
 
-    char buffer[BUFFER_SIZE];
     _Bool createServer(int port);
     void closeServer();
     char *readFromSocket();
+    void sendToClient(const void *buff, size_t n);
     void sendToClientSuccesOrFailed(OPTIONS result);
 
 #ifdef __cplusplus

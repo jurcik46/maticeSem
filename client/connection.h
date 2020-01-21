@@ -20,9 +20,8 @@ extern "C"
     struct ClientOptions
     {
         OPTIONS option;
+        char Payload[0];
     } __attribute__((packed));
-
-    char buffer[BUFFER_SIZE];
 
     _Bool createConnetion(char *serverIpAddress, int port);
     void closeConnection();

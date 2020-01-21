@@ -42,7 +42,7 @@ void printMatrix(int rows, int columns, struct Fraction **pMatrix)
         {
             if (pMatrix[i][j].numerator != 0)
             {
-                printf(" %lld/%lld ", pMatrix[i][j].numerator, pMatrix[i][j].denominator);
+                printf(" %ld/%ld ", pMatrix[i][j].numerator, pMatrix[i][j].denominator);
                 continue;
             }
             printf(" 0/0 ");
@@ -60,7 +60,7 @@ char *convertMatrixToString(int rows, int columns, struct Fraction **pMatrix)
     {
         for (int j = 0; j < columns; j++)
         {
-            sprintf(pomBuffer, "%lld/%lld;", pMatrix[i][j].numerator, pMatrix[i][j].denominator);
+            sprintf(pomBuffer, "%ld/%ld;", pMatrix[i][j].numerator, pMatrix[i][j].denominator);
             strcat(buffer, pomBuffer);
         }
     }
@@ -74,7 +74,7 @@ void convertStringToMatrix(char *matrixString, int rows, int columns, struct Fra
     {
         for (int j = 0; j < columns; j++)
         {
-            sscanf(ptr, "%lld/%lld", &pMatrixDestination[i][j].numerator, &pMatrixDestination[i][j].denominator);
+            sscanf(ptr, "%ld/%ld", &pMatrixDestination[i][j].numerator, &pMatrixDestination[i][j].denominator);
             ptr = strtok(NULL, ";");
         }
     }
@@ -102,7 +102,7 @@ struct Fraction **loadMatrixFromFile(struct Matrix *pMatrixStruct, struct Fracti
         {
             long numerator, denominator;
             char fractionBar;
-            fscanf(file, "%lld%c%lld", &numerator, &fractionBar, &denominator);
+            fscanf(file, "%ld%c%ld", &numerator, &fractionBar, &denominator);
             pMatrix[i][j].numerator = numerator;
             pMatrix[i][j].denominator = denominator;
         }

@@ -16,6 +16,152 @@ void printRawMatrixStruct(struct Matrix *matrixStruc)
 {
     printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", matrixStruc->label, matrixStruc->rows, matrixStruc->columns, matrixStruc->payloadLength, matrixStruc->matrixPayload);
 }
+
+void matrixInverseMenu()
+{
+    system("clear");
+    struct Matrix *firstMatrixStruct;
+    struct Fraction **firstMatrix;
+    struct Matrix *resultMatrixStruct;
+    struct Fraction **resultMatrix;
+    firstMatrixStruct = (struct Matrix *)readFromSocket();
+    printRawMatrixStruct(firstMatrixStruct);
+    printf("\n--------- Matrix %c ---------\n", firstMatrixStruct->label);
+    firstMatrix = allocateMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    convertStringToMatrix(firstMatrixStruct->matrixPayload, firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    resultMatrixStruct = initMatrixStruct(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    resultMatrixStruct->label = firstMatrixStruct->label;
+    resultMatrix = inverseMatrix(firstMatrixStruct->rows, firstMatrix, resultMatrix);
+    printf("\n--------- Inverse  Matrix %c  ---------\n", resultMatrixStruct->label);
+
+    printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
+    strcpy(resultMatrixStruct->matrixPayload, convertMatrixToString(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix));
+    resultMatrixStruct->payloadLength = strlen(resultMatrixStruct->matrixPayload);
+    sendToClient(resultMatrixStruct, sizeof(struct Matrix) + resultMatrixStruct->payloadLength);
+}
+
+void matrixDeterminantMenu()
+{
+    system("clear");
+    struct Matrix *firstMatrixStruct;
+    struct Fraction **firstMatrix;
+    firstMatrixStruct = (struct Matrix *)readFromSocket();
+    printRawMatrixStruct(firstMatrixStruct);
+    printf("\n--------- Matrix %c ---------\n", firstMatrixStruct->label);
+    firstMatrix = allocateMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    convertStringToMatrix(firstMatrixStruct->matrixPayload, firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+
+    struct Fraction determinant = determinantMatrix(firstMatrixStruct->rows, firstMatrixStruct->rows, firstMatrix);
+    printf("\n---------Determinant of Matrix %c  is %ld/%ld---------\n", firstMatrixStruct->label, determinant.numerator, determinant.denominator);
+    sendToClient(&determinant, sizeof(struct Fraction));
+}
+
+void matrixTransposeMenu()
+{
+    system("clear");
+    struct Matrix *firstMatrixStruct;
+    struct Fraction **firstMatrix;
+    struct Matrix *resultMatrixStruct;
+    struct Fraction **resultMatrix;
+    firstMatrixStruct = (struct Matrix *)readFromSocket();
+    printRawMatrixStruct(firstMatrixStruct);
+    printf("\n--------- Matrix %c ---------\n", firstMatrixStruct->label);
+    firstMatrix = allocateMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    convertStringToMatrix(firstMatrixStruct->matrixPayload, firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    resultMatrixStruct = initMatrixStruct(0, 0);
+    resultMatrixStruct->label = firstMatrixStruct->label;
+    resultMatrix = transposeMatrix(firstMatrixStruct, firstMatrix, &resultMatrixStruct, resultMatrix);
+    printf("\n---------Transpose  Matrix %c  ---------\n", resultMatrixStruct->label);
+
+    printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
+    strcpy(resultMatrixStruct->matrixPayload, convertMatrixToString(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix));
+    resultMatrixStruct->payloadLength = strlen(resultMatrixStruct->matrixPayload);
+    sendToClient(resultMatrixStruct, sizeof(struct Matrix) + resultMatrixStruct->payloadLength);
+}
+void matrixDiffMenu()
+{
+    system("clear");
+
+    struct Matrix *firstMatrixStruct;
+    struct Fraction **firstMatrix;
+    struct Matrix *secondMatrixStruct;
+    struct Fraction **secondMatrix;
+    struct Matrix *resultMatrixStruct;
+    struct Fraction **resultMatrix;
+    // firstMatrixStruct = initMatrixStruct(0, 0);
+    firstMatrixStruct = (struct Matrix *)readFromSocket();
+    printRawMatrixStruct(firstMatrixStruct);
+    sendToClientSuccesOrFailed(Succes);
+    // secondMatrixStruct = initMatrixStruct(0, 0);
+    secondMatrixStruct = (struct Matrix *)readFromSocket();
+    printRawMatrixStruct(secondMatrixStruct);
+
+    printf("\n--------- Matrix %c ---------\n", firstMatrixStruct->label);
+    firstMatrix = allocateMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    convertStringToMatrix(firstMatrixStruct->matrixPayload, firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    printf("\n");
+    printf("\n--------- Matrix %c ---------\n", secondMatrixStruct->label);
+    secondMatrix = allocateMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns);
+    convertStringToMatrix(secondMatrixStruct->matrixPayload, secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
+    printMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
+    printf("\n");
+
+    printf("\n---------Result of Difference  Matrix %c and Matrix %c ---------\n", firstMatrixStruct->label, secondMatrixStruct->label);
+    //TODO check same row a c lengt
+    resultMatrixStruct = initMatrixStruct(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    resultMatrixStruct->label = 'R';
+    resultMatrix = substractionMatrixs(firstMatrixStruct, firstMatrix, secondMatrixStruct, secondMatrix, resultMatrix);
+    printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
+    // sendToClientSuccesOrFailed(Succes);
+    strcpy(resultMatrixStruct->matrixPayload, convertMatrixToString(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix));
+    resultMatrixStruct->payloadLength = strlen(resultMatrixStruct->matrixPayload);
+    sendToClient(resultMatrixStruct, sizeof(struct Matrix) + resultMatrixStruct->payloadLength);
+}
+void matrixSumMenu()
+{
+    system("clear");
+
+    struct Matrix *firstMatrixStruct;
+    struct Fraction **firstMatrix;
+    struct Matrix *secondMatrixStruct;
+    struct Fraction **secondMatrix;
+    struct Matrix *resultMatrixStruct;
+    struct Fraction **resultMatrix;
+    // firstMatrixStruct = initMatrixStruct(0, 0);
+    firstMatrixStruct = (struct Matrix *)readFromSocket();
+    printRawMatrixStruct(firstMatrixStruct);
+    sendToClientSuccesOrFailed(Succes);
+    // secondMatrixStruct = initMatrixStruct(0, 0);
+    secondMatrixStruct = (struct Matrix *)readFromSocket();
+    printRawMatrixStruct(secondMatrixStruct);
+
+    printf("\n--------- Matrix %c ---------\n", firstMatrixStruct->label);
+    firstMatrix = allocateMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    convertStringToMatrix(firstMatrixStruct->matrixPayload, firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    printf("\n");
+    printf("\n--------- Matrix %c ---------\n", secondMatrixStruct->label);
+    secondMatrix = allocateMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns);
+    convertStringToMatrix(secondMatrixStruct->matrixPayload, secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
+    printMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
+    printf("\n");
+
+    printf("\n---------Result of Sum  Matrix %c and Matrix %c ---------\n", firstMatrixStruct->label, secondMatrixStruct->label);
+    //TODO check same row a c lengt
+    resultMatrixStruct = initMatrixStruct(firstMatrixStruct->rows, firstMatrixStruct->columns);
+    resultMatrixStruct->label = 'R';
+    resultMatrix = additionMatrixs(firstMatrixStruct, firstMatrix, secondMatrixStruct, secondMatrix, resultMatrix);
+    printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
+    // sendToClientSuccesOrFailed(Succes);
+    strcpy(resultMatrixStruct->matrixPayload, convertMatrixToString(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix));
+    resultMatrixStruct->payloadLength = strlen(resultMatrixStruct->matrixPayload);
+    sendToClient(resultMatrixStruct, sizeof(struct Matrix) + resultMatrixStruct->payloadLength);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -28,49 +174,23 @@ int main(int argc, char **argv)
     while (!end)
     {
         struct ClientOptions *cOptions = (struct ClientOptions *)readFromSocket();
-        struct Matrix *firstMatrixStruct;
-        struct Fraction **firstMatrix;
-        struct Matrix *secondMatrixStruct;
-        struct Fraction **secondMatrix;
-        struct Fraction **resultMatrix;
+
         switch (cOptions->option)
         {
         case Sum:
-            firstMatrixStruct = initMatrixStruct(0, 0);
-            firstMatrixStruct = (struct Matrix *)readFromSocket();
-            printRawMatrixStruct(firstMatrixStruct);
-            // sendToClientSuccesOrFailed(Succes);
-            secondMatrixStruct = initMatrixStruct(0, 0);
-            secondMatrixStruct = (struct Matrix *)readFromSocket();
-            printRawMatrixStruct(secondMatrixStruct);
-
-            printf("\n--------- Matrix %c ---------\n", firstMatrixStruct->label);
-            firstMatrix = allocateMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns);
-            convertStringToMatrix(firstMatrixStruct->matrixPayload, firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
-            printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
-            printf("\n");
-            printf("\n--------- Matrix %c ---------\n", secondMatrixStruct->label);
-            secondMatrix = allocateMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns);
-            convertStringToMatrix(secondMatrixStruct->matrixPayload, secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
-            printMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
-            printf("\n");
-
-            printf("\n---------Result of sum  Matrix %c and Matrix %c ---------\n", firstMatrixStruct->label, secondMatrixStruct->label);
-            //TODO check same row a c lengt
-            resultMatrix = additionMatrixs(firstMatrixStruct, firstMatrix, secondMatrixStruct, secondMatrix, resultMatrix);
-            printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, resultMatrix);
-            // sendToClientSuccesOrFailed(Succes);
-            printf("SUM\n");
+            matrixSumMenu();
             break;
         case Difference:
-            printf("ddd\n");
+            matrixDiffMenu();
             break;
         case Transpose:
-            printf("ttt\n");
+            matrixTransposeMenu();
             break;
         case Determinant:
+            matrixDeterminantMenu();
             break;
         case Inverse:
+            matrixInverseMenu();
             break;
         case End:
             end = true;

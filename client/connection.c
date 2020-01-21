@@ -52,8 +52,10 @@ void sendToServerOption(struct ClientOptions *clientOption)
 
 char *readFromSocket()
 {
-    memset(buffer, '\0', 1500);
-    read(Socket, buffer, 1500);
+    char *buffer = (char *)calloc(BUFFER_SIZE, sizeof(char));
+
+    memset(buffer, '\0', BUFFER_SIZE);
+    read(Socket, buffer, BUFFER_SIZE);
     return buffer;
 }
 void closeConnection()
