@@ -12,8 +12,8 @@ clean:
 %.o: %.c %.h
 	$(CC) -c -o $@ $<
 
-client: main.c connection.c matrix.c
-	gcc -std=c99  $^ -o $@ 
+client: main.c CMemLeak.c connection.c matrix.c
+	gcc -std=c99 -std=gnu99 $^ -o $@ 
 	
                 
 
