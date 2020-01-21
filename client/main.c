@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         return (EXIT_FAILURE);
     struct Matrix *test = initMatrixStruct(0, 0);
 
-    test->label = 'A';
+    test->label = 'C';
     struct Fraction **testMatrix = loadMatrixFromFile(test, testMatrix);
     if (testMatrix != NULL)
     {
