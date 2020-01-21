@@ -156,7 +156,7 @@ struct Fraction **inverseMatrix(uint32_t rc, const struct Fraction **matrixSourc
     struct Fraction determinantSourceMatrix = determinantMatrix(rc, rc, matrixSource);
     if (determinantSourceMatrix.numerator == 0)
     {
-        perror("Singular matrix, can't find its inverse!");
+        fprintf(stderr, " Singular matrix, can't find its inverse!  \n");
         return NULL;
     }
 

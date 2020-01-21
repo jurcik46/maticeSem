@@ -42,12 +42,23 @@ _Bool createConnetion(char *serverIpAddress, int port)
 
 void sendToServer(const void *buff, size_t n)
 {
-    write(Socket, buff, n);
+    if (write(Socket, buff, n) == -1)
+    {
+        perror("Connection was forcibly closed by the remote host");
+        closeConnection();
+        exit(EXIT_FAILURE);
+    };
 }
 
 void sendToServerOption(struct ClientOptions *clientOption)
 {
-    write(Socket, clientOption, sizeof(struct ClientOptions));
+
+    if (write(Socket, clientOption, sizeof(struct ClientOptions)) == -1)
+    {
+        perror("connection was forcibly closed by the remote host");
+        closeConnection();
+        exit(EXIT_FAILURE);
+    };
 }
 
 char *readFromSocket()
@@ -55,7 +66,12 @@ char *readFromSocket()
     char *buffer = (char *)calloc(BUFFER_SIZE, sizeof(char));
 
     memset(buffer, '\0', BUFFER_SIZE);
-    read(Socket, buffer, BUFFER_SIZE);
+    if (read(Socket, buffer, BUFFER_SIZE) == -1)
+    {
+        perror("connection was forcibly closed by the remote host");
+        closeConnection();
+        exit(EXIT_FAILURE);
+    };
     return buffer;
 }
 void closeConnection()

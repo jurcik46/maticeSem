@@ -7,10 +7,36 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
+#include <errno.h>
 
+#define _DEBUG
 #include "connection.h"
 #include "matrix.h"
-///TODO fixnu kontrolu vstupou na klientovy  fixnut uniky pamete pri druhom spusteni a refactor duplicity
+#include "CMemLeak.h"
+
+int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do
+    {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
+
 void waitForEnter()
 {
     printf("\nPress Enter to continue....");
@@ -42,7 +68,7 @@ void printRawMatrixStruct(struct Matrix *matrixStruc)
     printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", matrixStruc->label, matrixStruc->rows, matrixStruc->columns, matrixStruc->payloadLength, matrixStruc->matrixPayload);
 }
 
-void matrixInverseMenu()
+void matrixInverseMenu(struct ClientOptions *clientOption)
 {
     system("clear");
     printf("\n--------- Select the  matrix from the file. ---------\n");
@@ -57,18 +83,34 @@ void matrixInverseMenu()
         waitForEnter();
         return;
     }
-    strcpy(firstMatrixStruct->matrixPayload, convertMatrixToString(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix));
-    firstMatrixStruct->payloadLength = strlen(firstMatrixStruct->matrixPayload);
-    sendToServer(firstMatrixStruct, sizeof(struct Matrix) + firstMatrixStruct->payloadLength);
+
     // system("clear");
     printf("\n---------  Matrix %c ---------\n", firstMatrixStruct->label);
     printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    if (firstMatrixStruct->rows != firstMatrixStruct->columns)
+    {
+        fprintf(stderr, " The matrix must be square to calculate the determinant!  \n");
+        waitForEnter();
+        return;
+    }
+    sendToServerOption(clientOption);
+    msleep(200);
+    strcpy(firstMatrixStruct->matrixPayload, convertMatrixToString(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix));
+    firstMatrixStruct->payloadLength = strlen(firstMatrixStruct->matrixPayload);
+    sendToServer(firstMatrixStruct, sizeof(struct Matrix) + firstMatrixStruct->payloadLength);
 
     struct Matrix *resultMatrixStruct = (struct Matrix *)readFromSocket();
     struct Fraction **resultMatrix;
     printRawMatrixStruct(resultMatrixStruct);
-    resultMatrix = allocateMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns);
+    if (resultMatrixStruct->rows == 0 && resultMatrixStruct->columns == 0)
+    {
 
+        fprintf(stderr, " Singular matrix, can't find its inverse!  \n");
+        waitForEnter();
+        return;
+    }
+
+    resultMatrix = allocateMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns);
     convertStringToMatrix(resultMatrixStruct->matrixPayload, resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
     printf("\n--------- Inverse  Matrix %c ---------\n", firstMatrixStruct->label);
     printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
@@ -78,7 +120,7 @@ void matrixInverseMenu()
     // deAllocateMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
     waitForEnter();
 }
-void matrixDeterminantMenu()
+void matrixDeterminantMenu(struct ClientOptions *clientOption)
 {
     system("clear");
     printf("\n--------- Select the  matrix from the file. ---------\n");
@@ -95,6 +137,14 @@ void matrixDeterminantMenu()
     }
     printf("\n---------  Matrix %c ---------\n", firstMatrixStruct->label);
     printMatrix(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix);
+    if (firstMatrixStruct->rows != firstMatrixStruct->columns)
+    {
+        fprintf(stderr, " The matrix must be square to calculate the determinant! \n");
+        waitForEnter();
+        return;
+    }
+    sendToServerOption(clientOption);
+    msleep(200);
     strcpy(firstMatrixStruct->matrixPayload, convertMatrixToString(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix));
     firstMatrixStruct->payloadLength = strlen(firstMatrixStruct->matrixPayload);
     sendToServer(firstMatrixStruct, sizeof(struct Matrix) + firstMatrixStruct->payloadLength);
@@ -105,7 +155,7 @@ void matrixDeterminantMenu()
 
     // system("clear");
 }
-void matrixTransposeMenu()
+void matrixTransposeMenu(struct ClientOptions *clientOption)
 {
     system("clear");
     printf("\n--------- Select the  matrix from the file. ---------\n");
@@ -120,6 +170,8 @@ void matrixTransposeMenu()
         waitForEnter();
         return;
     }
+    sendToServerOption(clientOption);
+    msleep(200);
     strcpy(firstMatrixStruct->matrixPayload, convertMatrixToString(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix));
     firstMatrixStruct->payloadLength = strlen(firstMatrixStruct->matrixPayload);
     sendToServer(firstMatrixStruct, sizeof(struct Matrix) + firstMatrixStruct->payloadLength);
@@ -141,7 +193,7 @@ void matrixTransposeMenu()
     // deAllocateMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
     waitForEnter();
 }
-void matrixDiffMenu()
+void matrixDiffMenu(struct ClientOptions *clientOption)
 {
     system("clear");
     printf("\n--------- Select the first matrix from the file. ---------\n");
@@ -176,7 +228,14 @@ void matrixDiffMenu()
     }
     printf("\n--------- Second Matrix %c ---------\n", secondMatrixStruct->label);
     printMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
-
+    if (firstMatrixStruct->rows != secondMatrixStruct->rows || firstMatrixStruct->columns != secondMatrixStruct->columns)
+    {
+        fprintf(stderr, " We need matrices with the same number of elements to divide the matrices  \n");
+        waitForEnter();
+        return;
+    }
+    sendToServerOption(clientOption);
+    msleep(200);
     strcpy(firstMatrixStruct->matrixPayload, convertMatrixToString(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix));
     firstMatrixStruct->payloadLength = strlen(firstMatrixStruct->matrixPayload);
     sendToServer(firstMatrixStruct, sizeof(struct Matrix) + firstMatrixStruct->payloadLength);
@@ -199,7 +258,7 @@ void matrixDiffMenu()
     free(result);
     waitForEnter();
 }
-void matrixSumMenu()
+void matrixSumMenu(struct ClientOptions *clientOption)
 {
     system("clear");
     printf("\n--------- Select the first matrix from the file. ---------\n");
@@ -225,6 +284,7 @@ void matrixSumMenu()
 
     secondMatrixStruct->label = getUserInput();
     struct Fraction **secondMatrix = loadMatrixFromFile(secondMatrixStruct, secondMatrix);
+
     if (secondMatrix == NULL)
     {
         fprintf(stderr, "Failed to load matrix from file. Matrix: %C \n", secondMatrixStruct->label);
@@ -232,9 +292,17 @@ void matrixSumMenu()
         waitForEnter();
         return;
     }
+
     printf("\n--------- Second Matrix %c ---------\n", secondMatrixStruct->label);
     printMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
-
+    if (firstMatrixStruct->rows != secondMatrixStruct->rows || firstMatrixStruct->columns != secondMatrixStruct->columns)
+    {
+        fprintf(stderr, " We need matrices with the same number of elements to sum the matrices  \n");
+        waitForEnter();
+        return;
+    }
+    sendToServerOption(clientOption);
+    msleep(200);
     strcpy(firstMatrixStruct->matrixPayload, convertMatrixToString(firstMatrixStruct->rows, firstMatrixStruct->columns, firstMatrix));
     firstMatrixStruct->payloadLength = strlen(firstMatrixStruct->matrixPayload);
     sendToServer(firstMatrixStruct, sizeof(struct Matrix) + firstMatrixStruct->payloadLength);
@@ -253,8 +321,12 @@ void matrixSumMenu()
         convertStringToMatrix(resultMatrixStruct->matrixPayload, resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
         printf("\n---------Result of sum  Matrix %c and Matrix %c ---------\n", firstMatrixStruct->label, secondMatrixStruct->label);
         printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
+        // deAllocateMatrix(5, 5, resultMatrix);
+        free(resultMatrixStruct);
     }
-    free(result);
+    // free(result);
+    // free(firstMatrixStruct);
+    // free(secondMatrixStruct);
     waitForEnter();
 
     // strcpy(test->matrixPayload, convertMatrixToString(test->rows, test->columns, testMatrix));
@@ -264,20 +336,26 @@ void matrixSumMenu()
 
 int main(int argc, char **argv)
 {
-    if (!createConnetion("127.0.0.1", 5002))
+    if (argc < 3)
+    {
+        fprintf(stderr, "Klienta je nutne spustit s nasledujucimi argumentmi: adresa port.\n");
+    }
+
+    //ziskanie adresy a portu servera <netdb.h>
+    struct hostent *server = gethostbyname(argv[1]);
+    if (server == NULL)
+    {
+        fprintf(stderr, "Server neexistuje.\n");
+    }
+
+    int port = atoi(argv[2]);
+    if (port <= 0)
+    {
+        fprintf(stderr, "Port musi byt cele cislo vacsie ako 0.\n");
+    }
+    if (!createConnetion(argv[1], port))
         return (EXIT_FAILURE);
 
-    // char buff[1500];
-    // memset(buff, '\0', 1500);
-    // struct Matrix *a = initMatrixStruct(0, 0);
-    // read(getSocket(), buff, 1500);
-    // a = (struct Matrix *)buff;
-    // printf("Recieved Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", a->label, a->rows, a->columns, a->payloadLength, a->matrixPayload);
-    // struct Fraction **aMatrix = allocateMatrix(a->rows, a->columns);
-
-    // convertStringToMatrix(a->matrixPayload, a->rows, a->columns, aMatrix);
-    // printMatrix(a->rows, a->columns, aMatrix);
-    // write(getSocket(), , (sizeof(struct Fraction) + sizeof(char) * test->rows * test->columns));
     _Bool end = false;
     struct ClientOptions *cOption = calloc(1, sizeof(struct ClientOptions));
     while (!end)
@@ -287,28 +365,23 @@ int main(int argc, char **argv)
         {
         case '1':
             cOption->option = Sum;
-            sendToServerOption(cOption);
-            matrixSumMenu();
+            matrixSumMenu(cOption);
             break;
         case '2':
             cOption->option = Difference;
-            sendToServerOption(cOption);
-            matrixDiffMenu();
+            matrixDiffMenu(cOption);
             break;
         case '3':
             cOption->option = Transpose;
-            sendToServerOption(cOption);
-            matrixTransposeMenu();
+            matrixTransposeMenu(cOption);
             break;
         case '4':
             cOption->option = Determinant;
-            sendToServerOption(cOption);
-            matrixDeterminantMenu();
+            matrixDeterminantMenu(cOption);
             break;
         case '5':
             cOption->option = Inverse;
-            sendToServerOption(cOption);
-            matrixInverseMenu();
+            matrixInverseMenu(cOption);
             break;
         case '0':
             cOption->option = End;

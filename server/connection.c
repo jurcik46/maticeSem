@@ -1,5 +1,8 @@
 #include <stdbool.h>
-
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -60,20 +63,35 @@ char *readFromSocket()
 {
     char *buffer = (char *)calloc(BUFFER_SIZE, sizeof(char));
     memset(buffer, '\0', BUFFER_SIZE);
-    read(ClientSocket, buffer, BUFFER_SIZE);
+    if (read(ClientSocket, buffer, BUFFER_SIZE) == -1)
+    {
+        perror("connection was forcibly closed by the remote host");
+        closeServer();
+        exit(EXIT_FAILURE);
+    };
     return buffer;
 }
 
 void sendToClient(const void *buff, size_t n)
 {
-    write(ClientSocket, buff, n);
+    if (write(ClientSocket, buff, n) == -1)
+    {
+        perror("connection was forcibly closed by the remote host");
+        closeServer();
+        exit(EXIT_FAILURE);
+    };
 }
 
 void sendToClientSuccesOrFailed(OPTIONS result)
 {
     struct ClientOptions *cOption = calloc(1, sizeof(struct ClientOptions));
     cOption->option = result;
-    write(ClientSocket, cOption, sizeof(struct ClientOptions));
+    if (write(ClientSocket, cOption, sizeof(struct ClientOptions)) == -1)
+    {
+        perror("connection was forcibly closed by the remote host");
+        closeServer();
+        exit(EXIT_FAILURE);
+    };
     free(cOption);
 }
 

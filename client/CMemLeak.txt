@@ -1,0 +1,6 @@
+
+Final Report
+Total allocations    : 1
+Max memory allocation: 4 (0K)
+Total leak           : 0
+

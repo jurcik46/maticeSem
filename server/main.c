@@ -7,10 +7,12 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#define _DEBUG
 
 #include "connection.h"
 #include "matrix.h"
 #include "matrixOperations.h"
+#include "CMemLeak.h"
 
 void printRawMatrixStruct(struct Matrix *matrixStruc)
 {
@@ -33,12 +35,22 @@ void matrixInverseMenu()
     resultMatrixStruct = initMatrixStruct(firstMatrixStruct->rows, firstMatrixStruct->columns);
     resultMatrixStruct->label = firstMatrixStruct->label;
     resultMatrix = inverseMatrix(firstMatrixStruct->rows, firstMatrix, resultMatrix);
-    printf("\n--------- Inverse  Matrix %c  ---------\n", resultMatrixStruct->label);
-
-    printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
-    strcpy(resultMatrixStruct->matrixPayload, convertMatrixToString(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix));
-    resultMatrixStruct->payloadLength = strlen(resultMatrixStruct->matrixPayload);
-    sendToClient(resultMatrixStruct, sizeof(struct Matrix) + resultMatrixStruct->payloadLength);
+    if (resultMatrix != NULL)
+    {
+        printf("\n--------- Inverse  Matrix %c  ---------\n", resultMatrixStruct->label);
+        printMatrix(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix);
+        strcpy(resultMatrixStruct->matrixPayload, convertMatrixToString(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix));
+        resultMatrixStruct->payloadLength = strlen(resultMatrixStruct->matrixPayload);
+        sendToClient(resultMatrixStruct, sizeof(struct Matrix) + resultMatrixStruct->payloadLength);
+    }
+    else
+    {
+        resultMatrixStruct->rows = 0;
+        resultMatrixStruct->columns = 0;
+        strcpy(resultMatrixStruct->matrixPayload, convertMatrixToString(resultMatrixStruct->rows, resultMatrixStruct->columns, resultMatrix));
+        resultMatrixStruct->payloadLength = strlen(resultMatrixStruct->matrixPayload);
+        sendToClient(resultMatrixStruct, sizeof(struct Matrix) + resultMatrixStruct->payloadLength);
+    }
 }
 
 void matrixDeterminantMenu()
@@ -111,7 +123,6 @@ void matrixDiffMenu()
     printf("\n");
 
     printf("\n---------Result of Difference  Matrix %c and Matrix %c ---------\n", firstMatrixStruct->label, secondMatrixStruct->label);
-    //TODO check same row a c lengt
     resultMatrixStruct = initMatrixStruct(firstMatrixStruct->rows, firstMatrixStruct->columns);
     resultMatrixStruct->label = 'R';
     resultMatrix = substractionMatrixs(firstMatrixStruct, firstMatrix, secondMatrixStruct, secondMatrix, resultMatrix);
@@ -129,13 +140,12 @@ void matrixSumMenu()
     struct Fraction **firstMatrix;
     struct Matrix *secondMatrixStruct;
     struct Fraction **secondMatrix;
-    struct Matrix *resultMatrixStruct;
-    struct Fraction **resultMatrix;
-    // firstMatrixStruct = initMatrixStruct(0, 0);
+
+    firstMatrixStruct = initMatrixStruct(0, 0);
     firstMatrixStruct = (struct Matrix *)readFromSocket();
     printRawMatrixStruct(firstMatrixStruct);
     sendToClientSuccesOrFailed(Succes);
-    // secondMatrixStruct = initMatrixStruct(0, 0);
+    secondMatrixStruct = initMatrixStruct(0, 0);
     secondMatrixStruct = (struct Matrix *)readFromSocket();
     printRawMatrixStruct(secondMatrixStruct);
 
@@ -149,9 +159,10 @@ void matrixSumMenu()
     convertStringToMatrix(secondMatrixStruct->matrixPayload, secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
     printMatrix(secondMatrixStruct->rows, secondMatrixStruct->columns, secondMatrix);
     printf("\n");
-
+    struct Matrix *resultMatrixStruct;
+    struct Fraction **resultMatrix;
     printf("\n---------Result of Sum  Matrix %c and Matrix %c ---------\n", firstMatrixStruct->label, secondMatrixStruct->label);
-    //TODO check same row a c lengt
+
     resultMatrixStruct = initMatrixStruct(firstMatrixStruct->rows, firstMatrixStruct->columns);
     resultMatrixStruct->label = 'R';
     resultMatrix = additionMatrixs(firstMatrixStruct, firstMatrix, secondMatrixStruct, secondMatrix, resultMatrix);
@@ -164,6 +175,15 @@ void matrixSumMenu()
 
 int main(int argc, char **argv)
 {
+    if (argc < 2)
+    {
+        fprintf(stderr, "Sever je nutne spustit s nasledujucimi argumentmi: port.\n");
+    }
+    int port = atoi(argv[1]);
+    if (port <= 0)
+    {
+        fprintf(stderr, "Port musi byt cele cislo vacsie ako 0.\n");
+    }
 
     if (!createServer(5002))
         return (EXIT_FAILURE);
@@ -200,46 +220,6 @@ int main(int argc, char **argv)
         }
     }
 
-    // struct Matrix *test = initMatrixStruct(0, 0);
-
-    // test = (struct Matrix *)buff;
-
-    // struct Fraction **testMatrix = allocateMatrix(test->rows, test->columns);
-
-    // convertStringToMatrix(test->matrixPayload, test->rows, test->columns, testMatrix);
-    // // read(getSocket(), buff, sizeof(buff));
-    // // printf("%s\n", buff);
-    // printMatrix(test->rows, test->columns, testMatrix);
-    // printf("\n");
-
-    // // struct Fraction aaa = determinantMatrix(test->rows, test->rows, testMatrix);
-    // // printf("%ld/%ld\n", aaa.numerator, aaa.denominator);
-
-    // // closeServer();
-    // // printf("Connection was closed\n");
-    // // return (EXIT_SUCCESS);
-    // struct Matrix *pom = initMatrixStruct(test->rows, test->columns);
-    // // struct Fraction **pomMatrix = transposeMatrix(test, testMatrix, &pom, pomMatrix);
-    // // struct Fraction **pomMatrix;
-    // struct Fraction **pomMatrix = inverseMatrix(test->rows, testMatrix, pomMatrix);
-    // // _Bool re = inverseMatrix(pom->rows, testMatrix, pomMatrix);
-    // // printMatrix(pom->rows, pom->columns, pomMatrix);
-
-    // if (pomMatrix)
-    // {
-    //     printMatrix(pom->rows, pom->columns, pomMatrix);
-    //     printf("\n");
-    //     strcpy(pom->matrixPayload, convertMatrixToString(pom->rows, pom->columns, pomMatrix));
-    //     pom->payloadLength = strlen(pom->matrixPayload);
-    //     write(getSocket(), pom, sizeof(struct Matrix) + strlen(pom->matrixPayload));
-    //     printf("Sending Label: %c Rows: %d  Columns: %d Payload length: %d  Data: %s \n", pom->label, pom->rows, pom->columns, pom->payloadLength, pom->matrixPayload);
-    // }
-
-    // deAllocateMatrix(pom->rows, pom->columns, pom->matrix);
-    // free(pom);
-    // read(getSocket(), test, sizeof(struct Matrix) + (test->rows * test->columns * sizeof(struct Fraction)));
-    // struct Fraction a = (struct Fraction)test->matrix[0][0];
-    // printf("%ld  %ld \n", test->matrix[0][0].numerator, test->matrix[0][0].denominator);
     closeServer();
     printf("Connection was closed\n");
     return (EXIT_SUCCESS);
